@@ -71,9 +71,11 @@ onMounted(() => {
   fetchLawyers();
   
   // ✅ Scroll to top of cases list when entering page
-  if (casesTop.value) {
-    casesTop.value.scrollIntoView({ behavior: 'smooth' });
-  }
+  setTimeout(() => {
+    if (casesTop.value) {
+      casesTop.value.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 100);
 });
 
 // Fetch user's cases
@@ -153,14 +155,14 @@ const getFilterCount = (filter) => {
 
 const getStatusClass = (status) => {
   const classes = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    assigned: 'bg-yellow-100 text-yellow-800',
-    ongoing: 'bg-blue-100 text-blue-800',
-    closed: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800',
-    review: 'bg-purple-100 text-purple-800'
+    pending: 'status-pending',
+    assigned: 'status-pending',
+    ongoing: 'status-ongoing',
+    closed: 'status-closed',
+    rejected: 'status-rejected',
+    review: 'status-default'
   };
-  return classes[status] || 'bg-gray-100 text-gray-800';
+  return classes[status] || 'status-default';
 };
 
 const formatDate = (date) => {
@@ -312,8 +314,8 @@ const evaluateCase = (title, description, caseType) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="dashboard-container">
+    <div class="container">
       <!-- Header -->
       <div class="flex justify-between items-center mb-8">
         <div>
@@ -323,7 +325,7 @@ const evaluateCase = (title, description, caseType) => {
         <button
           v-if="isClient"
           @click="showCreateModal = true"
-          class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+          class="btn btn-primary"
         >
           + New Case
         </button>
@@ -376,7 +378,7 @@ const evaluateCase = (title, description, caseType) => {
         <button
           v-if="isClient"
           @click="showCreateModal = true"
-          class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+          class="btn btn-primary"
         >
           Create Your First Case
         </button>
@@ -391,12 +393,12 @@ const evaluateCase = (title, description, caseType) => {
         <div
           v-for="caseItem in filteredCases"
           :key="caseItem.id"
-          class="bg-white p-6 rounded-lg shadow cursor-pointer hover:shadow-lg transition"
+          class="bg-white p-6 rounded-lg shadow cursor-pointer hover:shadow-lg"
           @click="viewCase(caseItem.id)"
         >
           <div class="flex justify-between items-start mb-4">
             <h3 class="font-bold text-lg text-gray-900">{{ caseItem.title }}</h3>
-            <span :class="getStatusClass(caseItem.status)" class="text-xs px-2 py-1 rounded-full font-medium capitalize">
+            <span :class="['status-badge', getStatusClass(caseItem.status)]" class="text-xs px-2 py-1 rounded-full font-medium capitalize">
               {{ caseItem.status }}
             </span>
           </div>
@@ -413,25 +415,45 @@ const evaluateCase = (title, description, caseType) => {
         </div>
       </div>
 
-      <!-- Create Case Modal -->
-      <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold">Create New Case</h2>
-            <button @click="closeModal" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      <!-- Lawyer Section -->
+      <div class="mt-12">
+        <h2 class="text-2xl font-bold mb-6 text-center">Find a Lawyer</h2>
+        <div v-if="loadingLawyers" class="text-center py-4">Loading lawyers...</div>
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-for="lawyer in lawyers" :key="lawyer.id" class="bg-white rounded-lg shadow p-5">
+            <div class="font-bold text-lg">{{ lawyer.name }}</div>
+            <div class="text-sm text-gray-600">{{ lawyer.email }}</div>
+            <div v-if="lawyer.specialization" class="mt-1">
+              <span class="status-badge status-ongoing">{{ lawyer.specialization }}</span>
+            </div>
+            <div class="mt-4 flex gap-2">
+              <button @click="openMessageModal(lawyer.id)" class="btn btn-primary btn-sm">Message</button>
+              <button @click="openCreateForLawyer(lawyer.id)" class="btn btn-success btn-sm">Request Case</button>
+            </div>
           </div>
-          <form @submit.prevent="createCase" class="space-y-4">
+        </div>
+      </div>
+
+      <!-- Create Case Modal -->
+      <div v-show="showCreateModal" class="modal-overlay" @click.self="closeModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title">Create New Case</h2>
+            <button @click="closeModal" class="modal-close">×</button>
+          </div>
+          <div class="modal-body">
+            <div v-if="createError" class="alert alert-error">{{ createError }}</div>
             <div>
-              <label class="block text-sm font-medium mb-1">Case Title *</label>
-              <input v-model="newCaseTitle" type="text" class="w-full px-3 py-2 border rounded" required />
+              <label class="form-label">Case Title *</label>
+              <input v-model="newCaseTitle" type="text" class="form-input" required />
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Description *</label>
-              <textarea v-model="newCaseDescription" rows="4" class="w-full px-3 py-2 border rounded" required></textarea>
+              <label class="form-label">Description *</label>
+              <textarea v-model="newCaseDescription" rows="4" class="form-input" required></textarea>
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Case Type *</label>
-              <select v-model="newCaseType" class="w-full px-3 py-2 border rounded" required>
+              <label class="form-label">Case Type *</label>
+              <select v-model="newCaseType" class="form-input" required>
                 <option value="civil">Civil</option>
                 <option value="criminal">Criminal</option>
                 <option value="family">Family</option>
@@ -442,57 +464,43 @@ const evaluateCase = (title, description, caseType) => {
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">Priority</label>
-              <select v-model="newCasePriority" class="w-full px-3 py-2 border rounded">
+              <label class="form-label">Priority</label>
+              <select v-model="newCasePriority" class="form-input">
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
                 <option value="high">High</option>
                 <option value="urgent">Urgent</option>
               </select>
             </div>
-            <div v-if="createError" class="text-red-600">{{ createError }}</div>
-            <div class="flex justify-end space-x-3 pt-4">
-              <button type="button" @click="closeModal" class="px-4 py-2 bg-gray-200 rounded">Cancel</button>
-              <button type="submit" :disabled="creating" class="px-4 py-2 bg-blue-600 text-white rounded">
-                {{ creating ? 'Creating...' : 'Create Case' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Lawyer Section -->
-      <div class="mt-12">
-        <h2 class="text-2xl font-bold mb-6 text-center">Find a Lawyer</h2>
-        <div v-if="loadingLawyers" class="text-center py-4">Loading lawyers...</div>
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div v-for="lawyer in lawyers" :key="lawyer.id" class="bg-white rounded-lg shadow p-5">
-            <div class="font-bold text-lg">{{ lawyer.name }}</div>
-            <div class="text-sm text-gray-600">{{ lawyer.email }}</div>
-            <div v-if="lawyer.specialization" class="mt-1">
-              <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{{ lawyer.specialization }}</span>
-            </div>
-            <div class="mt-4 flex gap-2">
-              <button @click="openMessageModal(lawyer.id)" class="px-3 py-1 bg-blue-600 text-white text-sm rounded">
-                Message
-              </button>
-              <button @click="openCreateForLawyer(lawyer.id)" class="px-3 py-1 bg-green-600 text-white text-sm rounded">
-                Request Case
-              </button>
-            </div>
+          </div>
+          <div class="modal-footer">
+            <button @click="closeModal" class="btn btn-secondary">Cancel</button>
+            <button @click="createCase" :disabled="creating" class="btn btn-primary">
+              {{ creating ? 'Creating...' : 'Create Case' }}
+            </button>
           </div>
         </div>
       </div>
 
       <!-- Message Modal -->
-      <div v-if="showMessageModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 w-full max-w-md">
-          <h3 class="font-bold mb-3">Send Message</h3>
-          <textarea v-model="messageText" rows="3" class="w-full border rounded p-2 mb-2" placeholder="Your message..."></textarea>
-          <div v-if="messageError" class="text-red-600 text-sm mb-2">{{ messageError }}</div>
-          <div class="flex justify-end gap-2">
-            <button @click="closeMessageModal" class="px-3 py-1 bg-gray-200 rounded">Cancel</button>
-            <button @click="sendMessageToLawyer" :disabled="messageLoading" class="px-3 py-1 bg-blue-600 text-white rounded">
+      <div v-show="showMessageModal" class="modal-overlay" @click.self="closeMessageModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title">Send Message</h3>
+            <button @click="closeMessageModal" class="modal-close">×</button>
+          </div>
+          <div class="modal-body">
+            <textarea 
+              v-model="messageText" 
+              rows="3" 
+              class="form-input" 
+              placeholder="Your message..."
+            ></textarea>
+            <div v-if="messageError" class="alert alert-error">{{ messageError }}</div>
+          </div>
+          <div class="modal-footer">
+            <button @click="closeMessageModal" class="btn btn-secondary">Cancel</button>
+            <button @click="sendMessageToLawyer" :disabled="messageLoading" class="btn btn-primary">
               {{ messageLoading ? 'Sending...' : 'Send' }}
             </button>
           </div>
@@ -500,23 +508,37 @@ const evaluateCase = (title, description, caseType) => {
       </div>
 
       <!-- Create for Lawyer Modal -->
-      <div v-if="showCreateForLawyerModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 w-full max-w-md">
-          <h3 class="font-bold mb-3">Request Case from Lawyer</h3>
-          <input v-model="createForLawyerTitle" placeholder="Case title" class="w-full border rounded p-2 mb-2" />
-          <textarea v-model="createForLawyerDesc" placeholder="Case description" class="w-full border rounded p-2 mb-2" rows="3"></textarea>
-          <select v-model="createForLawyerType" class="w-full border rounded p-2 mb-2">
-            <option value="civil">Civil</option>
-            <option value="criminal">Criminal</option>
-            <option value="family">Family</option>
-            <option value="property">Property</option>
-            <option value="corporate">Corporate</option>
-            <option value="other">Other</option>
-          </select>
-          <div v-if="createForLawyerError" class="text-red-600 text-sm mb-2">{{ createForLawyerError }}</div>
-          <div class="flex justify-end gap-2">
-            <button @click="closeCreateForLawyer" class="px-3 py-1 bg-gray-200 rounded">Cancel</button>
-            <button @click="createCaseForLawyer" :disabled="createForLawyerLoading" class="px-3 py-1 bg-green-600 text-white rounded">
+      <div v-show="showCreateForLawyerModal" class="modal-overlay" @click.self="closeCreateForLawyer">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title">Request Case from Lawyer</h3>
+            <button @click="closeCreateForLawyer" class="modal-close">×</button>
+          </div>
+          <div class="modal-body">
+            <input 
+              v-model="createForLawyerTitle" 
+              placeholder="Case title" 
+              class="form-input" 
+            />
+            <textarea 
+              v-model="createForLawyerDesc" 
+              placeholder="Case description" 
+              class="form-input" 
+              rows="3"
+            ></textarea>
+            <select v-model="createForLawyerType" class="form-input">
+              <option value="civil">Civil</option>
+              <option value="criminal">Criminal</option>
+              <option value="family">Family</option>
+              <option value="property">Property</option>
+              <option value="corporate">Corporate</option>
+              <option value="other">Other</option>
+            </select>
+            <div v-if="createForLawyerError" class="alert alert-error">{{ createForLawyerError }}</div>
+          </div>
+          <div class="modal-footer">
+            <button @click="closeCreateForLawyer" class="btn btn-secondary">Cancel</button>
+            <button @click="createCaseForLawyer" :disabled="createForLawyerLoading" class="btn btn-success">
               {{ createForLawyerLoading ? 'Creating...' : 'Submit Request' }}
             </button>
           </div>
@@ -525,3 +547,131 @@ const evaluateCase = (title, description, caseType) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 0.5rem;
+  max-width: 48rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  width: 100%;
+  padding: 1.5rem;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #9ca3af;
+}
+
+.modal-close:hover {
+  color: #6b7280;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* Alert boxes */
+.alert {
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.alert-error {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* Grid system */
+.grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.grid-cols-1 {
+  grid-template-columns: 1fr;
+}
+
+.md\:grid-cols-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.lg\:grid-cols-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* Status badge colors */
+.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-ongoing {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-closed {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-rejected {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.status-default {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-content {
+    padding: 1rem;
+  }
+}
+</style>

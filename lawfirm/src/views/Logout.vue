@@ -1,7 +1,8 @@
+<!-- src/views/Logout.vue -->
 <template>
-  <div class="flex justify-center items-center min-h-screen bg-gray-50">
-    <div class="bg-white p-8 rounded-lg shadow-lg text-center">
-      <h1 class="text-2xl font-bold mb-4">Logging out...</h1>
+  <div class="login-container">
+    <div class="login-card">
+      <h1 class="login-title">Logging out...</h1>
       <p class="text-gray-600">Clearing your session...</p>
     </div>
   </div>

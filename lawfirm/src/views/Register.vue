@@ -31,7 +31,6 @@ const handleRegister = () => {
         throw new Error(data.message || 'Registration failed')
       }
       if (data.success && data.data.token) {
-        // ✅ Use consistent keys: 'token' and 'user'
         localStorage.setItem('token', data.data.token)
         localStorage.setItem('user', JSON.stringify(data.data.user))
         setTimeout(() => {
@@ -49,56 +48,81 @@ const handleRegister = () => {
 </script>
 
 <template>
-  <div class="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 px-4 py-8">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-8 max-h-[90vh] overflow-y-auto">
-      <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">LawConnect - Sign Up</h1>
+  <div class="login-container">
+    <div class="login-card">
+      <h1 class="login-title">LawConnect - Sign Up</h1>
       <form @submit.prevent="handleRegister" class="space-y-4">
-        <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-          <input v-model="formData.name" id="name" type="text" placeholder="Enter your full name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <div class="form-group">
+          <label for="name" class="form-label">Full Name</label>
+          <input v-model="formData.name" id="name" type="text" placeholder="Enter your full name" required class="form-input" />
         </div>
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-          <input v-model="formData.email" id="email" type="email" placeholder="Enter your email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <div class="form-group">
+          <label for="email" class="form-label">Email</label>
+          <input v-model="formData.email" id="email" type="email" placeholder="Enter your email" required class="form-input" />
         </div>
-        <div>
-          <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-          <input v-model="formData.password" id="password" type="password" placeholder="Enter your password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input v-model="formData.password" id="password" type="password" placeholder="Enter your password" required class="form-input" />
         </div>
-        <div>
-          <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-          <input v-model="formData.phone" id="phone" type="tel" placeholder="Enter your phone number" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <div class="form-group">
+          <label for="phone" class="form-label">Phone</label>
+          <input v-model="formData.phone" id="phone" type="tel" placeholder="Enter your phone number" class="form-input" />
         </div>
-        <div>
-          <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role</label>
-          <select v-model="formData.role" id="role" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div class="form-group">
+          <label for="role" class="form-label">Role</label>
+          <select v-model="formData.role" id="role" class="form-input">
             <option value="client">Client</option>
             <option value="lawyer">Lawyer</option>
           </select>
         </div>
-        <div v-if="formData.role === 'lawyer'" class="bg-blue-50 p-4 rounded-lg space-y-3">
-          <div>
-            <label for="specialization" class="block text-sm font-medium text-gray-700 mb-2">Specialization</label>
-            <input v-model="formData.specialization" id="specialization" type="text" placeholder="e.g., Corporate Law" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <div v-if="formData.role === 'lawyer'" class="lawyer-fields">
+          <div class="form-group">
+            <label for="specialization" class="form-label">Specialization</label>
+            <input v-model="formData.specialization" id="specialization" type="text" placeholder="e.g., Corporate Law" class="form-input" />
           </div>
-          <div>
-            <label for="licenseNumber" class="block text-sm font-medium text-gray-700 mb-2">License Number</label>
-            <input v-model="formData.licenseNumber" id="licenseNumber" type="text" placeholder="Enter your license number" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <div class="form-group">
+            <label for="licenseNumber" class="form-label">License Number</label>
+            <input v-model="formData.licenseNumber" id="licenseNumber" type="text" placeholder="Enter your license number" class="form-input" />
           </div>
-          <div>
-            <label for="experience" class="block text-sm font-medium text-gray-700 mb-2">Years of Experience</label>
-            <input v-model.number="formData.experience" id="experience" type="number" placeholder="Enter years of experience" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <div class="form-group">
+            <label for="experience" class="form-label">Years of Experience</label>
+            <input v-model.number="formData.experience" id="experience" type="number" placeholder="Enter years of experience" class="form-input" />
           </div>
         </div>
-        <p v-if="error" class="text-red-500 text-sm text-center">{{ error }}</p>
-        <button type="submit" :disabled="loading" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-70">
+        <p v-if="error" class="error-message">{{ error }}</p>
+        <button type="submit" :disabled="loading" class="btn btn-primary btn-block">
           {{ loading ? 'Registering...' : 'Sign Up' }}
         </button>
       </form>
-      <p class="text-center text-gray-600 mt-6">
+      <p class="signup-link">
         Already have an account?
-        <router-link to="/login" class="text-blue-500 font-semibold hover:underline">Login here</router-link>
+        <router-link to="/login" class="signup-link-text">Login here</router-link>
       </p>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Lawyer fields */
+.lawyer-fields {
+  padding: 1rem;
+  background-color: #eff6ff;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* Error message */
+.error-message {
+  color: #dc2626;
+  font-size: 0.875rem;
+  text-align: center;
+  margin-top: -0.5rem;
+}
+
+/* Form spacing */
+.space-y-4 {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+</style>

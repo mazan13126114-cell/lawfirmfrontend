@@ -163,13 +163,13 @@ const evaluateCaseSuccess = () => {
 
 const getStatusClass = (status) => {
   const classes = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    assigned: 'bg-yellow-100 text-yellow-800',
-    ongoing: 'bg-blue-100 text-blue-800',
-    closed: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800',
+    pending: 'status-pending',
+    assigned: 'status-pending',
+    ongoing: 'status-ongoing',
+    closed: 'status-closed',
+    rejected: 'status-rejected'
   };
-  return classes[status] || 'bg-gray-100 text-gray-800';
+  return classes[status] || 'status-default';
 };
 
 const formatDate = (date) => {
@@ -198,26 +198,26 @@ const canMessage = computed(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="dashboard-container">
+    <div class="container">
       <div v-if="loading" class="text-center py-12">
         <p class="text-gray-500">Loading case details...</p>
       </div>
 
       <div v-else-if="caseData" class="space-y-6">
         <!-- Case Header -->
-        <div class="bg-white p-6 rounded-lg shadow">
+        <div class="card">
           <div class="flex justify-between items-start mb-4">
             <div>
               <h1 class="text-3xl font-bold text-gray-900">{{ caseData.title }}</h1>
               <p class="text-sm text-gray-500 mt-1">Case #{{ caseData.caseNumber }}</p>
             </div>
-            <span :class="getStatusClass(caseData.status)" class="px-4 py-2 rounded-full font-medium capitalize">
+            <span :class="['status-badge', getStatusClass(caseData.status)]" class="px-4 py-2 rounded-full font-medium capitalize">
               {{ caseData.status }}
             </span>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div class="grid grid-cols-1 sm-grid-cols-2 lg-grid-cols-3 gap-4 mt-6">
             <div>
               <p class="text-sm text-gray-500">Case Type</p>
               <p class="text-lg font-semibold capitalize">{{ caseData.caseType }}</p>
@@ -239,11 +239,12 @@ const canMessage = computed(() => {
                   @click="evaluateCaseSuccess"
                   :disabled="aiLoading"
                   class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded"
+                  style="background-color: #dbeafe; color: #1e40af; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem;"
                 >
                   {{ aiLoading ? 'Analyzing...' : 'Evaluate' }}
                 </button>
               </div>
-              <div v-if="aiAnalysis" class="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+              <div v-if="aiAnalysis" class="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded" style="background-color: #f9fafb; padding: 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; color: #4b5563;">
                 {{ aiAnalysis }}
               </div>
             </div>
@@ -251,25 +252,25 @@ const canMessage = computed(() => {
         </div>
 
         <!-- Description -->
-        <div class="bg-white p-6 rounded-lg shadow">
+        <div class="card">
           <h2 class="text-xl font-bold text-gray-900 mb-4">Description</h2>
-          <p class="text-gray-700 whitespace-pre-wrap">{{ caseData.description }}</p>
+          <p class="text-gray-700" style="white-space: pre-wrap;">{{ caseData.description }}</p>
         </div>
 
         <!-- Parties -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-white p-6 rounded-lg shadow">
+        <div class="grid grid-cols-1 sm-grid-cols-2 gap-6">
+          <div class="card">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Client</h2>
-            <div v-if="caseData.client" class="space-y-2">
+            <div v-if="caseData.client" style="display: flex; flex-direction: column; gap: 0.5rem;">
               <p><span class="font-medium">Name:</span> {{ caseData.client.name }}</p>
               <p><span class="font-medium">Email:</span> {{ caseData.client.email }}</p>
               <p v-if="caseData.client.phone"><span class="font-medium">Phone:</span> {{ caseData.client.phone }}</p>
             </div>
           </div>
 
-          <div class="bg-white p-6 rounded-lg shadow">
+          <div class="card">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Assigned Lawyer</h2>
-            <div v-if="caseData.lawyer" class="space-y-2">
+            <div v-if="caseData.lawyer" style="display: flex; flex-direction: column; gap: 0.5rem;">
               <p><span class="font-medium">Name:</span> {{ caseData.lawyer.name }}</p>
               <p><span class="font-medium">Email:</span> {{ caseData.lawyer.email }}</p>
               <p v-if="caseData.lawyer.specialization">
@@ -283,63 +284,256 @@ const canMessage = computed(() => {
         </div>
 
         <!-- Case Messages -->
-        <div class="bg-white p-6 rounded-lg shadow">
+        <div class="card">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold text-gray-900">Case Messages</h2>
             <span class="text-sm text-gray-500">{{ messages.length }} messages</span>
           </div>
 
-          <div class="h-64 overflow-y-auto border rounded p-3 mb-4 bg-gray-50">
-            <div v-if="messages.length === 0" class="text-center text-gray-500 mt-20">
+          <div class="chat-container" style="height: 16rem;">
+            <div v-if="messages.length === 0" class="chat-empty">
               No messages yet. Start a conversation about this case.
             </div>
-            <div v-else class="space-y-3">
+            <div v-else style="display: flex; flex-direction: column; gap: 0.75rem;">
               <div 
                 v-for="msg in messages" 
                 :key="msg.id"
-                class="p-2"
+                style="padding: 0.5rem;"
                 :class="msg.senderId == user?.id ? 'text-right' : 'text-left'"
               >
                 <div
-                  class="inline-block px-3 py-1 rounded-lg max-w-xs"
-                  :class="msg.senderId == user?.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'"
+                  style="display: inline-block; padding: 0.5rem 0.75rem; border-radius: 0.75rem; max-width: 80%;"
+                  :style="{ backgroundColor: msg.senderId == user?.id ? '#3b82f6' : '#f3f4f6', color: msg.senderId == user?.id ? 'white' : '#1f2937' }"
                 >
                   {{ msg.message }}
                 </div>
-                <p class="text-xs text-gray-500 mt-1">{{ formatDate(msg.createdAt) }}</p>
+                <p class="text-xs text-gray-500 mt-1" style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem;">{{ formatDate(msg.createdAt) }}</p>
               </div>
             </div>
           </div>
 
-          <div v-if="canMessage" class="flex gap-2">
+          <div v-if="canMessage" style="display: flex; gap: 0.5rem; margin-top: 1rem;">
             <input
               v-model="newMessage"
               @keyup.enter="sendMessage"
               type="text"
               placeholder="Send a message about this case..."
-              class="flex-1 px-3 py-2 border border-gray-300 rounded"
+              class="form-input"
+              style="flex: 1; padding: 0.5rem; font-size: 0.875rem;"
             />
             <button
               @click="sendMessage"
               :disabled="messageLoading"
-              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              class="btn btn-primary"
+              style="padding: 0.5rem 1rem; font-size: 0.875rem;"
             >
               {{ messageLoading ? 'Sending...' : 'Send' }}
             </button>
           </div>
-          <div v-else class="text-gray-500 text-sm">
+          <div v-else class="text-gray-500 text-sm" style="margin-top: 1rem; font-size: 0.875rem; color: #6b7280;">
             {{ user.role === 'client' ? 'Lawyer must be assigned before messaging' : 'Client details available for messaging' }}
           </div>
-          <div v-if="messageError" class="text-red-600 text-sm mt-2">{{ messageError }}</div>
+          <div v-if="messageError" class="text-red-600 text-sm mt-2" style="color: #dc2626; font-size: 0.875rem; margin-top: 0.5rem;">{{ messageError }}</div>
         </div>
       </div>
 
-      <div v-else class="text-center py-12 bg-white rounded-lg shadow">
+      <div v-else class="text-center py-12" style="background-color: white; border-radius: 0.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 3rem 0;">
         <p class="text-gray-500">Case not found</p>
-        <button @click="router.push('/cases')" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        <button @click="router.push('/cases')" class="btn btn-primary mt-4" style="margin-top: 1rem;">
           Back to Cases
         </button>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Grid system */
+.grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.grid-cols-1 {
+  grid-template-columns: 1fr;
+}
+
+.sm-grid-cols-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.lg-grid-cols-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* Flex utilities */
+.flex {
+  display: flex;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-left {
+  text-align: left;
+}
+
+/* Spacing */
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mt-1 {
+  margin-top: 0.25rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.mt-6 {
+  margin-top: 1.5rem;
+}
+
+.py-12 {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+/* Typography */
+.text-3xl {
+  font-size: 1.875rem;
+  font-weight: 700;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.text-lg {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-xs {
+  font-size: 0.75rem;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+/* Colors */
+.text-gray-500 {
+  color: #6b7280;
+}
+
+.text-gray-600 {
+  color: #4b5563;
+}
+
+.text-gray-700 {
+  color: #374151;
+}
+
+.text-gray-900 {
+  color: #111827;
+}
+
+.text-green-600 {
+  color: #16a34a;
+}
+
+/* Status badge colors */
+.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-ongoing {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-closed {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-rejected {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.status-default {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+/* Chat container */
+.chat-container {
+  height: 16rem;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  background-color: #f9fafb;
+  margin-bottom: 1rem;
+}
+
+.chat-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #9ca3af;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .lg-grid-cols-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .sm-grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .chat-container {
+    height: 20rem;
+  }
+}
+</style>

@@ -5,14 +5,12 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
-// Data
 let user = ref(null);
 let loading = ref(false);
 let updating = ref(false);
 let error = ref('');
 let success = ref('');
 
-// Form data
 let name = ref('');
 let email = ref('');
 let phone = ref('');
@@ -20,13 +18,18 @@ let specialization = ref('');
 let licenseNumber = ref('');
 let experience = ref('');
 
-// Password change
 let currentPassword = ref('');
 let newPassword = ref('');
 let confirmPassword = ref('');
 let changingPassword = ref(false);
 let passwordError = ref('');
 let passwordSuccess = ref('');
+
+const logout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  router.push('/');
+};
 
 onMounted(() => {
   getProfile();
@@ -48,13 +51,14 @@ const getProfile = () => {
         phone.value = user.value.phone || '';
         specialization.value = user.value.specialization || '';
         licenseNumber.value = user.value.licenseNumber || '';
-        experience.value = user.value.experience?.toString() || ''; // Convert number to string for input
+        experience.value = user.value.experience?.toString() || '';
       }
       loading.value = false;
     })
     .catch((err) => {
       console.error('Failed to fetch profile:', err);
       loading.value = false;
+      router.push('/login');
     });
 };
 
@@ -69,12 +73,9 @@ const updateProfile = () => {
     phone: phone.value.trim() || null
   };
 
-  // Handle lawyer-specific fields
   if (user.value.role === 'lawyer') {
     updateData.specialization = specialization.value.trim() || null;
     updateData.licenseNumber = licenseNumber.value.trim() || null;
-    
-    // ✅ Only include experience if it's a valid number
     const expNum = parseInt(experience.value);
     updateData.experience = isNaN(expNum) ? null : expNum;
   }
@@ -91,7 +92,6 @@ const updateProfile = () => {
     .then((data) => {
       if (data.success) {
         user.value = data.data.user;
-        // ✅ Update localStorage with new user data
         localStorage.setItem('user', JSON.stringify(data.data.user));
         success.value = 'Profile updated successfully!';
       } else {
@@ -133,7 +133,6 @@ const changePassword = () => {
     .then((data) => {
       if (data.success) {
         passwordSuccess.value = 'Password changed successfully!';
-        // Clear fields
         currentPassword.value = '';
         newPassword.value = '';
         confirmPassword.value = '';
@@ -150,8 +149,8 @@ const changePassword = () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="dashboard-container">
+    <div class="container">
       <h1 class="text-3xl font-bold text-gray-900 mb-8">My Profile</h1>
 
       <div v-if="loading" class="text-center py-12">
@@ -160,7 +159,7 @@ const changePassword = () => {
 
       <div v-else class="space-y-6">
         <!-- Profile Information -->
-        <div class="bg-white p-6 rounded-lg shadow">
+        <div class="card">
           <h2 class="text-xl font-bold text-gray-900 mb-6">Profile Information</h2>
 
           <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
@@ -178,7 +177,7 @@ const changePassword = () => {
                 v-model="name"
                 type="text"
                 required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
               />
             </div>
 
@@ -188,7 +187,7 @@ const changePassword = () => {
                 v-model="email"
                 type="email"
                 disabled
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100"
               />
               <p class="text-xs text-gray-500 mt-1">Email cannot be changed</p>
             </div>
@@ -198,7 +197,7 @@ const changePassword = () => {
               <input
                 v-model="phone"
                 type="tel"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
               />
             </div>
 
@@ -208,7 +207,7 @@ const changePassword = () => {
                 :value="user?.role"
                 type="text"
                 disabled
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed capitalize"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 capitalize"
               />
             </div>
 
@@ -219,7 +218,7 @@ const changePassword = () => {
                 <input
                   v-model="specialization"
                   type="text"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg"
                 />
               </div>
 
@@ -228,7 +227,7 @@ const changePassword = () => {
                 <input
                   v-model="licenseNumber"
                   type="text"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg"
                 />
               </div>
 
@@ -238,7 +237,7 @@ const changePassword = () => {
                   v-model="experience"
                   type="number"
                   min="0"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg"
                 />
               </div>
             </div>
@@ -254,7 +253,7 @@ const changePassword = () => {
         </div>
 
         <!-- Change Password -->
-        <div class="bg-white p-6 rounded-lg shadow">
+        <div class="card">
           <h2 class="text-xl font-bold text-gray-900 mb-6">Change Password</h2>
 
           <div v-if="passwordError" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
@@ -272,7 +271,7 @@ const changePassword = () => {
                 v-model="currentPassword"
                 type="password"
                 required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
               />
             </div>
 
@@ -282,7 +281,7 @@ const changePassword = () => {
                 v-model="newPassword"
                 type="password"
                 required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
               />
             </div>
 
@@ -292,7 +291,7 @@ const changePassword = () => {
                 v-model="confirmPassword"
                 type="password"
                 required
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg"
               />
             </div>
 
@@ -304,6 +303,14 @@ const changePassword = () => {
               {{ changingPassword ? 'Changing...' : 'Change Password' }}
             </button>
           </form>
+        </div>
+
+        <!-- Logout Button -->
+        <div class="card" style="background-color: #fef2f2; border: 1px solid #fecaca;">
+          <h2 class="text-xl font-bold text-red-800 mb-4">Account Management</h2>
+          <button @click="logout" class="w-full py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700">
+            Logout
+          </button>
         </div>
       </div>
     </div>

@@ -6,7 +6,6 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 const user = ref(null);
 const loading = ref(true);
-const lawyers = ref([]);
 const cases = ref([]);
 const chatHistory = ref([]);
 const chatInput = ref('');
@@ -19,21 +18,8 @@ onMounted(() => {
     return;
   }
   user.value = JSON.parse(storedUser);
-  fetchLawyers();
   fetchCases();
 });
-
-const fetchLawyers = () => {
-  const token = localStorage.getItem('token');
-  fetch('http://localhost:5000/api/lawyers', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) lawyers.value = data.data.users || [];
-    })
-    .catch(err => console.error('Failed to fetch lawyers:', err));
-};
 
 const fetchCases = () => {
   const token = localStorage.getItem('token');
@@ -51,19 +37,10 @@ const fetchCases = () => {
     });
 };
 
-// ✅ Start conversation with lawyer
-const startConversation = (lawyerId) => {
-  router.push({
-    path: '/messages',
-    query: { to: lawyerId }
-  });
-};
-
 const goToCases = () => {
   router.push('/cases');
 };
 
-// AI Chat
 const sendAIMessage = () => {
   const token = localStorage.getItem('token');
   const message = chatInput.value.trim();
@@ -105,43 +82,37 @@ const formatDate = (date) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Header -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ user?.name }}! 👋</h1>
-        <p class="text-gray-600 mt-2">Manage your cases and get AI legal help.</p>
+  <div class="dashboard-container">
+    <div class="container">
+      <div class="dashboard-header">
+        <h1>Welcome back, {{ user?.name }}! 👋</h1>
+        <p>Manage your cases and get AI legal help.</p>
       </div>
-
+       <router-link to="/profile" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+      Profile
+    </router-link>
       <div v-if="loading" class="text-center py-12">
         <p class="text-gray-500">Loading your dashboard...</p>
       </div>
 
-      <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Cases Section -->
-        <div class="lg:col-span-2">
-          <div class="bg-white p-6 rounded-lg shadow">
-            <div class="flex justify-between items-center mb-4">
+      <div v-else class="dashboard-grid">
+        <div class="dashboard-main">
+          <div class="card">
+            <div class="card-header">
               <h2 class="text-xl font-bold">My Cases</h2>
-              <router-link to="/cases" class="text-blue-600 hover:text-blue-700 font-medium">
-                View All →
-              </router-link>
+              <router-link to="/cases" class="view-all-link">View All →</router-link>
             </div>
             
-            <div v-if="cases.length === 0" class="text-center py-8">
-              <div class="text-5xl mb-4">📋</div>
-              <p class="text-gray-500">You haven't created any cases yet.</p>
+            <div v-if="cases.length === 0" class="empty-state">
+              <div class="empty-icon">📋</div>
+              <p>You haven't created any cases yet.</p>
             </div>
             
-            <ul v-else class="space-y-4">
-              <li v-for="caseItem in cases.slice(0, 3)" :key="caseItem.id" class="border-b pb-4 last:border-0 last:pb-0">
+            <ul v-else>
+              <li v-for="caseItem in cases.slice(0, 3)" :key="caseItem.id" class="mb-4 pb-4 border-b border-gray-200 last:border-0 last:pb-0">
                 <div class="flex justify-between">
                   <div class="font-bold text-gray-900">{{ caseItem.title }}</div>
-                  <span class="px-2 py-1 text-xs rounded-full capitalize"
-                    :class="caseItem.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                           caseItem.status === 'ongoing' ? 'bg-blue-100 text-blue-800' :
-                           caseItem.status === 'closed' ? 'bg-green-100 text-green-800' :
-                           'bg-red-100 text-red-800'">
+                  <span class="status-badge" :class="`status-${caseItem.status}`">
                     {{ caseItem.status }}
                   </span>
                 </div>
@@ -155,57 +126,40 @@ const formatDate = (date) => {
           </div>
         </div>
 
-        <!-- AI Chatbot -->
-        <div class="bg-white p-6 rounded-lg shadow">
+        <div class="card">
           <h2 class="text-xl font-bold mb-4">🤖 AI Legal Assistant</h2>
-          <div class="h-80 overflow-y-auto border rounded p-3 bg-gray-50 mb-3">
-            <div v-if="chatHistory.length === 0" class="text-center text-gray-500 mt-20">
+          <div class="chat-container">
+            <div v-if="chatHistory.length === 0" class="chat-empty">
               <p>Ask about legal rights or case strategy!</p>
             </div>
-            <div v-for="(msg, index) in chatHistory" :key="index" class="mb-2">
-              <div :class="msg.role === 'user' ? 'text-right' : 'text-left'">
-                <div
-                  class="inline-block px-3 py-1 rounded-lg max-w-xs"
-                  :class="msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'"
-                >
-                  {{ msg.content }}
-                </div>
+            <div v-for="(msg, index) in chatHistory" :key="index" class="chat-message">
+              <div :class="['chat-bubble', msg.role === 'user' ? 'chat-user' : 'chat-assistant']">
+                {{ msg.content }}
               </div>
             </div>
             <div v-if="aiError" class="text-red-600 text-sm mt-2">{{ aiError }}</div>
           </div>
-          <div class="flex gap-2">
+          <div class="chat-input-container">
             <input
               v-model="chatInput"
               @keyup.enter="sendAIMessage"
               type="text"
               placeholder="Ask a legal question..."
-              class="flex-1 px-3 py-2 border rounded text-sm"
+              class="chat-input"
             />
-            <button
-              @click="sendAIMessage"
-              class="px-3 py-2 bg-blue-600 text-white rounded text-sm"
-            >
-              Send
-            </button>
+            <button @click="sendAIMessage" class="btn btn-primary chat-send-btn">Send</button>
           </div>
-          <p class="text-xs text-yellow-700 mt-2 bg-yellow-50 p-2 rounded">
-            ⚠️ AI advice is informational only.
-          </p>
+          <p class="ai-disclaimer">⚠️ AI advice is informational only.</p>
         </div>
       </div>
 
-      <!-- Find Lawyers CTA -->
-      <div v-if="!loading && cases.length === 0" class="mt-12 text-center">
-        <div class="text-6xl mb-6">💼</div>
+      <div v-if="!loading && cases.length === 0" class="text-center mt-12">
+        <div class="empty-icon-large">💼</div>
         <h3 class="text-2xl font-bold text-gray-900 mb-4">Get Started with LawConnect</h3>
         <p class="text-gray-600 max-w-2xl mx-auto mb-8">
           Create your first case and find the perfect lawyer for your legal needs.
         </p>
-        <router-link
-          to="/cases"
-          class="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold text-lg hover:shadow-lg inline-block"
-        >
+        <router-link to="/cases" class="btn btn-primary btn-lg">
           🚀 Find a Lawyer Now
         </router-link>
       </div>
