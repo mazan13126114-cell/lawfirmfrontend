@@ -4,6 +4,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 // Import views
 import Login from '../views/Login.vue';
 import Register from '../views/Register.vue';
+import ForgotPassword from '../views/ForgotPassword.vue';
 import ClientDashboard from '../views/ClientDashboard.vue';
 import LawyerDashboard from '../views/LawyerDashboard.vue';
 import AdminDashboard from '../views/AdminDashboard.vue';
@@ -12,11 +13,13 @@ import CaseDetail from '../views/CaseDetail.vue';
 import Messages from '../views/Messages.vue';
 import Profile from '../views/Profile.vue';
 import Logout from '../views/Logout.vue';
+import ResetPassword from '../views/ResetPassword.vue';
 
 const routes = [
   { path: '/', name: 'Login', component: Login },
   { path: '/register', name: 'Register', component: Register },
-  
+  { path: '/forgot-password', name: 'ForgotPassword', component: ForgotPassword },
+  { path: '/reset-password', name: 'ResetPassword', component: ResetPassword },
   // Client & Lawyer dashboards
   { path: '/dashboard/client', name: 'ClientDashboard', component: ClientDashboard },
   { path: '/dashboard/lawyer', name: 'LawyerDashboard', component: LawyerDashboard },
@@ -40,7 +43,7 @@ const router = createRouter({
 // Auth Guard
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token');
-  const publicPages = ['Login', 'Register'];
+  const publicPages = ['Login', 'Register', 'ForgotPassword'];
   const authRequired = !publicPages.includes(to.name);
 
   if (authRequired && !token) {

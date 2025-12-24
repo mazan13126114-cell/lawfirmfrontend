@@ -242,10 +242,11 @@ const changePassword = () => {
               </div>
             </div>
 
+            <!-- ✅ YELLOW TEXT: Update Profile button -->
             <button
               type="submit"
               :disabled="updating"
-              class="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50"
+              class="w-full py-3 bg-blue-600 text-yellow-400 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50"
             >
               {{ updating ? 'Updating...' : 'Update Profile' }}
             </button>
@@ -295,10 +296,11 @@ const changePassword = () => {
               />
             </div>
 
+            <!-- ✅ YELLOW TEXT: Change Password button -->
             <button
               type="submit"
               :disabled="changingPassword"
-              class="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50"
+              class="w-full py-3 bg-blue-600 text-yellow-400 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50"
             >
               {{ changingPassword ? 'Changing...' : 'Change Password' }}
             </button>
@@ -308,7 +310,11 @@ const changePassword = () => {
         <!-- Logout Button -->
         <div class="card" style="background-color: #fef2f2; border: 1px solid #fecaca;">
           <h2 class="text-xl font-bold text-red-800 mb-4">Account Management</h2>
-          <button @click="logout" class="w-full py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700">
+          <!-- ✅ YELLOW TEXT: Logout button -->
+          <button 
+            @click="logout" 
+            class="w-full py-3 bg-red-600 text-yellow-400 rounded-lg font-semibold hover:bg-red-700"
+          >
             Logout
           </button>
         </div>
