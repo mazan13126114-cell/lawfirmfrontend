@@ -2,10 +2,11 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import ResetPasswordForm from '../components/ResetPasswordForm.vue'
 
 const router = useRouter()
 const email = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
 const loading = ref(false)
 const error = ref('')
 const message = ref('')
@@ -17,42 +18,19 @@ const handleEmailSubmit = async () => {
     return
   }
 
-  loading.value = true
+  // Just proceed to password reset form without calling API
+  message.value = 'Please enter your new password'
+  step.value = 'reset'
   error.value = ''
-  message.value = ''
-
-  try {
-    const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.value })
-    })
-
-    const data = await response.json()
-
-    if (data.success) {
-      message.value = 'Email found! You can now reset your password.'
-      step.value = 'reset'
-      setTimeout(() => {
-        message.value = ''
-      }, 3000)
-    } else {
-      error.value = data.message || 'Email not found'
-    }
-  } catch (err) {
-    error.value = 'Error connecting to server. Please try again.'
-  } finally {
-    loading.value = false
-  }
 }
 
-const handlePasswordReset = async (newPassword, confirmPassword) => {
-  if (!newPassword || !confirmPassword) {
+const handlePasswordReset = async () => {
+  if (!newPassword.value || !confirmPassword.value) {
     error.value = 'Both password fields are required'
     return
   }
 
-  if (newPassword !== confirmPassword) {
+  if (newPassword.value !== confirmPassword.value) {
     error.value = 'Passwords do not match'
     return
   }
@@ -67,7 +45,7 @@ const handlePasswordReset = async (newPassword, confirmPassword) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: email.value,
-        password: newPassword
+        password: newPassword.value
       })
     })
 
@@ -119,15 +97,44 @@ const handlePasswordReset = async (newPassword, confirmPassword) => {
       </div>
 
       <!-- Step 2: Password Reset -->
-      <ResetPasswordForm
-        v-else
-        :email="email"
-        :loading="loading"
-        :error="error"
-        :message="message"
-        @submit="handlePasswordReset"
-        @back="step = 'email'"
-      />
+      <div v-if="step === 'reset'">
+        <form @submit.prevent="handlePasswordReset" class="space-y-4">
+          <div class="form-group">
+            <label for="newPassword" class="form-label">New Password</label>
+            <input
+              id="newPassword"
+              v-model="newPassword"
+              type="password"
+              placeholder="Enter your new password"
+              required
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPassword" class="form-label">Confirm Password</label>
+            <input
+              id="confirmPassword"
+              v-model="confirmPassword"
+              type="password"
+              placeholder="Confirm your new password"
+              required
+              class="form-input"
+            />
+          </div>
+
+          <p v-if="error" class="text-red-600 text-sm text-center">{{ error }}</p>
+          <p v-if="message" class="text-green-600 text-sm text-center">{{ message }}</p>
+
+          <button type="submit" :disabled="loading" class="btn btn-primary btn-block">
+            {{ loading ? 'Resetting...' : 'Reset Password' }}
+          </button>
+
+          <button type="button" @click="() => { step = 'email'; newPassword = ''; confirmPassword = ''; error = ''; message = '' }" class="btn btn-secondary btn-block" :disabled="loading">
+            ← Back
+          </button>
+        </form>
+      </div>
 
       <p class="text-center mt-6">
         <router-link to="/" class="text-blue-600 hover:underline">← Back to Login</router-link>
@@ -214,6 +221,20 @@ const handlePasswordReset = async (newPassword, confirmPassword) => {
 }
 
 .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #5a6268;
+}
+
+.btn-secondary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

@@ -126,7 +126,8 @@ const changePassword = () => {
     },
     body: JSON.stringify({
       currentPassword: currentPassword.value,
-      newPassword: newPassword.value
+      newPassword: newPassword.value,
+      confirmPassword: confirmPassword.value
     })
   })
     .then((res) => res.json())
