@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
-// ✅ New ref for scroll-to-top
+//  New ref for scroll-to-top
 const casesTop = ref(null);
 
 const cases = ref([]);
@@ -70,7 +70,7 @@ onMounted(() => {
   getCases();
   fetchLawyers();
   
-  // ✅ Scroll to top of cases list when entering page
+  // Scroll to top of cases list when entering page
   setTimeout(() => {
     if (casesTop.value) {
       casesTop.value.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -359,12 +359,12 @@ const evaluateCase = (title, description, caseType) => {
         </nav>
       </div>
 
-      <!-- ✅ Loading State -->
+      <!--  Loading State -->
       <div ref="casesTop" v-if="loading" class="text-center py-12">
         <p class="text-gray-500">Loading cases...</p>
       </div>
 
-      <!-- ✅ Empty State -->
+      <!--  Empty State -->
       <div 
         ref="casesTop"
         v-else-if="filteredCases.length === 0" 
@@ -384,7 +384,7 @@ const evaluateCase = (title, description, caseType) => {
         </button>
       </div>
 
-      <!-- ✅ Cases Grid -->
+      <!-- Cases Grid -->
       <div 
         ref="casesTop"
         v-else 

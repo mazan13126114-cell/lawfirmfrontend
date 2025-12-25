@@ -242,7 +242,7 @@ const changePassword = () => {
               </div>
             </div>
 
-            <!-- ✅ YELLOW TEXT: Update Profile button -->
+            <!--  YELLOW TEXT: Update Profile button -->
             <button
               type="submit"
               :disabled="updating"
@@ -296,7 +296,7 @@ const changePassword = () => {
               />
             </div>
 
-            <!-- ✅ YELLOW TEXT: Change Password button -->
+            <!--  YELLOW TEXT: Change Password button -->
             <button
               type="submit"
               :disabled="changingPassword"
@@ -310,7 +310,7 @@ const changePassword = () => {
         <!-- Logout Button -->
         <div class="card" style="background-color: #fef2f2; border: 1px solid #fecaca;">
           <h2 class="text-xl font-bold text-red-800 mb-4">Account Management</h2>
-          <!-- ✅ YELLOW TEXT: Logout button -->
+          <!--  YELLOW TEXT: Logout button -->
           <button 
             @click="logout" 
             class="w-full py-3 bg-red-600 text-yellow-400 rounded-lg font-semibold hover:bg-red-700"

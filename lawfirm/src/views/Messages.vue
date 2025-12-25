@@ -176,7 +176,7 @@ const formatDate = (date) => {
           
           <div v-else class="chat-full">
             <div class="chat-header">
-              💬 Chat with {{ activeConversation.user.name }}
+               Chat with {{ activeConversation.user.name }}
               <span v-if="activeConversation.case" class="case-context">
                 📋 (Case: {{ activeConversation.case.title }})
               </span>

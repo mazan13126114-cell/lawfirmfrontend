@@ -24,7 +24,7 @@ const routes = [
   { path: '/dashboard/client', name: 'ClientDashboard', component: ClientDashboard },
   { path: '/dashboard/lawyer', name: 'LawyerDashboard', component: LawyerDashboard },
   
-  // ✅ Admin goes to /admin
+  //  Admin goes to /admin
   { path: '/admin', name: 'AdminDashboard', component: AdminDashboard },
   
   // Other routes
@@ -51,11 +51,11 @@ router.beforeEach((to, from, next) => {
     return;
   }
 
-  // ✅ Redirect /dashboard to /admin for admins
+  //  Redirect /dashboard to /admin for admins
   if (to.path === '/dashboard' && token) {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     if (user.role === 'admin') {
-      next('/admin'); // ✅ Go directly to /admin
+      next('/admin'); // Go directly to /admin
       return;
     }
     if (user.role === 'lawyer') {

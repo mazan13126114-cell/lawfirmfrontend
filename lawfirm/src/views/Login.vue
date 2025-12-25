@@ -56,7 +56,7 @@ const handleLogin = () => {
           <label for="password" class="form-label">Password</label>
           <input id="password" v-model="password" type="password" placeholder="Enter your password" required class="form-input" />
         </div>
-        <!-- ✅ SIMPLE FORGOT PASSWORD -->
+        <!--  SIMPLE FORGOT PASSWORD -->
         <div class="text-right">
           <router-link to="/forgot-password" class="text-blue-600 text-sm hover:underline">
             Forgot password?

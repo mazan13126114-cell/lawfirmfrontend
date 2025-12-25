@@ -20,16 +20,32 @@ onMounted(() => {
   fetchActiveCases();
 });
 
+// FIXED: Added proper loading state management
 const fetchPendingRequests = () => {
   const token = localStorage.getItem('token');
   fetch('http://localhost:5000/api/cases/requests', {
     headers: { 'Authorization': `Bearer ${token}` }
   })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) pendingRequests.value = data.data.requests || [];
+    .then(res => {
+      //  Check if response is OK
+      if (!res.ok) {
+        throw new Error('Failed to fetch requests');
+      }
+      return res.json();
     })
-    .catch(err => console.error('Failed to fetch requests:', err));
+    .then(data => {
+      if (data.success) {
+        pendingRequests.value = data.data.requests || [];
+      }
+    })
+    .catch(err => {
+      console.error('Failed to fetch requests:', err);
+      pendingRequests.value = []; //  Set empty array on error
+    })
+    .finally(() => {
+      //  Only hide loading when BOTH requests are complete
+      // We'll handle this differently below
+    });
 };
 
 const fetchActiveCases = () => {
@@ -37,18 +53,74 @@ const fetchActiveCases = () => {
   fetch('http://localhost:5000/api/cases', {
     headers: { 'Authorization': `Bearer ${token}` }
   })
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) {
+        throw new Error('Failed to fetch cases');
+      }
+      return res.json();
+    })
     .then(data => {
       if (data.success) {
         activeCases.value = (data.data.cases || []).filter(c => ['assigned', 'ongoing'].includes(c.status));
       }
-      loading.value = false;
     })
     .catch(err => {
       console.error('Failed to fetch cases:', err);
+      activeCases.value = [];
+    })
+    .finally(() => {
+      loading.value = false; //  Hide loading after cases fetch
+    });
+};
+
+//  NEW: Combined loading handler
+const fetchAllData = () => {
+  const token = localStorage.getItem('token');
+  const requestsPromise = fetch('http://localhost:5000/api/cases/requests', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  }).then(res => {
+    if (!res.ok) throw new Error('Failed to fetch requests');
+    return res.json();
+  }).then(data => {
+    if (data.success) {
+      pendingRequests.value = data.data.requests || [];
+    }
+  }).catch(err => {
+    console.error('Failed to fetch requests:', err);
+    pendingRequests.value = [];
+  });
+
+  const casesPromise = fetch('http://localhost:5000/api/cases', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  }).then(res => {
+    if (!res.ok) throw new Error('Failed to fetch cases');
+    return res.json();
+  }).then(data => {
+    if (data.success) {
+      activeCases.value = (data.data.cases || []).filter(c => ['assigned', 'ongoing'].includes(c.status));
+    }
+  }).catch(err => {
+    console.error('Failed to fetch cases:', err);
+    activeCases.value = [];
+  });
+
+  //  Wait for both promises to complete
+  Promise.all([requestsPromise, casesPromise])
+    .finally(() => {
       loading.value = false;
     });
 };
+
+// Update onMounted to use combined fetch
+onMounted(() => {
+  const storedUser = localStorage.getItem('user');
+  if (!storedUser) {
+    router.push('/login');
+    return;
+  }
+  user.value = JSON.parse(storedUser);
+  fetchAllData(); //  Use combined fetch
+});
 
 const acceptRequest = (caseId) => {
   const token = localStorage.getItem('token');
@@ -56,11 +128,14 @@ const acceptRequest = (caseId) => {
     method: 'PUT',
     headers: { 'Authorization': `Bearer ${token}` }
   })
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) throw new Error('Accept failed');
+      return res.json();
+    })
     .then(data => {
       if (data.success) {
         pendingRequests.value = pendingRequests.value.filter(r => r.id !== caseId);
-        fetchActiveCases();
+        fetchAllData(); //  Refresh all data
       }
     })
     .catch(err => console.error('Accept failed:', err));
@@ -72,10 +147,14 @@ const rejectRequest = (caseId) => {
     method: 'PUT',
     headers: { 'Authorization': `Bearer ${token}` }
   })
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) throw new Error('Reject failed');
+      return res.json();
+    })
     .then(data => {
       if (data.success) {
         pendingRequests.value = pendingRequests.value.filter(r => r.id !== caseId);
+        fetchAllData(); //  Refresh all data
       }
     })
     .catch(err => console.error('Reject failed:', err));
@@ -84,18 +163,31 @@ const rejectRequest = (caseId) => {
 const viewCase = (caseId) => {
   router.push(`/cases/${caseId}`);
 };
+
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
 </script>
 
 <template>
   <div class="dashboard-container">
     <div class="container">
       <div class="dashboard-header">
-        <h1>Welcome back, Lawyer {{ user?.name }}! 👨‍⚖️</h1>
-        <p>Review new case requests and manage your active cases.</p>
-      </div>
+        <div class="flex items-center justify-between">
+          <div>
+            <h1>Welcome back, Lawyer {{ user?.name }}! 👨‍⚖️</h1>
+            <p>Review new case requests and manage your active cases.</p>
+          </div>
           <router-link to="/profile" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-        View Profile
-      </router-link>
+            View Profile
+          </router-link>
+        </div>
+      </div>
+
       <div v-if="loading" class="text-center py-12">
         <p class="text-gray-500">Loading your dashboard...</p>
       </div>

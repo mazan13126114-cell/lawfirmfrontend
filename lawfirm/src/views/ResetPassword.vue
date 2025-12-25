@@ -40,13 +40,13 @@ const handleSubmit = () => {
   error.value = ''
   success.value = ''
 
-  // ✅ CORRECT: Call reset-password endpoint with token
+  // CORRECT: Call reset-password endpoint with token
   fetch('http://localhost:5000/api/auth/reset-password', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      token: token.value,        // ✅ token from email link
-      password: password.value   // ✅ new password
+      token: token.value,        // token from email link
+      password: password.value   //  new password
     })
   })
     .then(response => response.json())

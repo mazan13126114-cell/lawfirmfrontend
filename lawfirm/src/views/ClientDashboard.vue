@@ -37,7 +37,7 @@ const fetchCases = () => {
     });
 };
 
-// ✅ Go to lawyers section in Cases
+// Go to lawyers section in Cases
 const goToLawyers = () => {
   router.push('/cases');
 };
@@ -88,7 +88,7 @@ const formatDate = (date) => {
       <div class="dashboard-header">
         <div class="flex items-center justify-between">
           <div>
-            <h1>Welcome back, {{ user?.name }}! 👋</h1>
+            <h1>Welcome back, {{ user?.name }}! </h1>
             <p>Manage your cases and get AI legal help.</p>
           </div>
           <router-link to="/profile" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
@@ -131,7 +131,7 @@ const formatDate = (date) => {
             </ul>
           </div>
 
-          <!-- ✅ DEDICATED FIND LAWYER SECTION -->
+          <!--  DEDICATED FIND LAWYER SECTION -->
           <div class="card" style="background: linear-gradient(135deg, #3b82f6, #7c3aed); border: none; color: white;">
             <div class="text-center">
               <h2 class="text-2xl font-bold mb-4">Need Legal Help?</h2>
@@ -179,7 +179,7 @@ const formatDate = (date) => {
           Create your first case and find the perfect lawyer for your legal needs.
         </p>
         <router-link to="/cases" class="btn btn-primary btn-lg">
-          🚀 Find a Lawyer Now
+           Find a Lawyer Now
         </router-link>
       </div>
     </div>
